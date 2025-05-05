@@ -62,20 +62,29 @@ class movie_reviews:
         
         #creates the tool vect and then fits our training data to 
         #min_df deletes words not in 5 data sets this removes miss spellings and things that may not be in our test set
-        self.vect= CountVectorizer(min_df=5, stop_words="english").fit(review_train)
-        self.ReviewsTrain=vect.transform(self.review_train)
+        self.vect= CountVectorizer(min_df=5, stop_words="english").fit(self.review_train)
+        self.ReviewsTrain=self.vect.transform(self.review_train)
         
     def LogGrid(self):
         self.Log=LogisticRegression(max_iter=200, solver='saga',verbose=0)
+
+        #scores=cross_val_score(Log, ReviewsTrain, sentiment_train, cv=5)\
+        #testing for the best C parameter for LogReg small C is normally better for normal data with alot of useless characters
+        # with stop words C=0.1 is the best
         self.parameters= {'C':[0.001, 0.01, 0.1, 1,10]}
         self.grid=GridSearchCV(self.Log, self.parameters, cv=5)
         self.grid.fit(self.ReviewsTrain,self.sentiment_train)
         print("The best score is ",self.grid.best_score_)
         print("The best parameter is ",self.grid.best_params_)
-        self.X_test=vect.transform(self.review_test)
+
+        #transform our test set so it fits the needed dimensions of the matrix for an accurate prediction
+        self.X_test=self.vect.transform(self.review_test)
         print("The test score is ",self.grid.score(self.X_test,self.sentiment_test))
                 
     def Input(self, input):
-        self.transform=vect.transform([input])
+        #transform our test set so it fits the needed dimensions of the matrix for an accurate prediction
+        self.transform=self.vect.transform([input])
+
+        #predicts whether the word is a positive or negative sentiment. 
         self.prediction=self.grid.predict(self.transform)
-        return self.prediction
+        return self.prediction 
